@@ -5,6 +5,13 @@ import PackageDescription
 
 let package = Package(
     name: "HowLongToBeatSwift",
+    defaultLocalization: "en",
+    platforms: [
+        .iOS("15.0"),
+        .macOS("12.0"),
+        .tvOS("15.0"),
+        .watchOS("8.0")
+    ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
@@ -15,9 +22,9 @@ let package = Package(
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "HowLongToBeatSwift"),
-        .testTarget(
-            name: "HowLongToBeatSwiftTests",
-            dependencies: ["HowLongToBeatSwift"]),
+            name: "HowLongToBeatSwift",
+            resources: [
+                .process("Localizable.xcstrings")
+            ])
     ]
 )
