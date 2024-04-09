@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct HowLongToBeatGame: Codable {
+public struct HowLongToBeatGame: Codable, Equatable, Hashable {
     public let game_id: Int
     public let game_name: String
     let game_name_date: Int
@@ -52,6 +52,14 @@ public struct HowLongToBeatGame: Codable {
             .completionist: Double(comp_100)
             // Add other properties as needed
         ]
+    }
+    
+    public static func == (lhs: HowLongToBeatGame, rhs: HowLongToBeatGame) -> Bool {
+        return lhs.game_id == rhs.game_id && lhs.game_name == rhs.game_name
+    }
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(game_id)
+        hasher.combine(game_name)
     }
     
 

@@ -96,7 +96,7 @@ public class HLTBRequest{
                 
                 // You can iterate through each game and access its properties
                 for game in games {
-                    print("Game ID: \(game.game_id), Name: \(game.game_name)")
+                    print("Game ID: \(game.game_id), Name: \(game.game_name), Release: \(game.release_world.formatted())")
                     // Access other properties as needed
                 }
                 
@@ -108,6 +108,15 @@ public class HLTBRequest{
                         game.game_alias == searchTerm
                     }
                 }
+                
+                print("Number of filtered games: \(filtered.count) - for searchTerm: \(searchTerm)")
+                
+                // You can iterate through each game and access its properties
+                for game in filtered {
+                    print("Filtered: Game ID: \(game.game_id), Name: \(game.game_name), Release: \(game.release_world.formatted())")
+                    // Access other properties as needed
+                }
+                
                 
                 return filtered.count > 0 ? filtered : games
             } catch {
