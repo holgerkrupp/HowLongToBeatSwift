@@ -76,7 +76,6 @@ public struct JSONData: Codable {
     let data: [HowLongToBeatGame]
     let userData: [String]
     let displayModifier: String?
-    // Add other properties as needed
     }
 
 public enum GameMode: String {
@@ -89,7 +88,6 @@ public enum GameMode: String {
     case versus = "Vs."
     
     public var localizedDescription: String {
-        // You can use NSLocalizedString or your preferred localization method here
         switch self {
         case .mainStory: return String(localized: "Main Story")
         case .mainPlusExtras: return String(localized:"Main + Extras", comment: "")

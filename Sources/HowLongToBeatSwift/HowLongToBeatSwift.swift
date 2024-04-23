@@ -19,15 +19,15 @@ public class HLTBRequest{
             switch self {
                 
             case .networkError(let message):
-                return "Network error: \(message)"
+                return String(format: "Network error: %@", message.localizedDescription)
             case .noDataReceived:
-                return "No data received from the server"
+                return String(localized: "No data received from the server")
             case .invalidResponse:
-                return "Invalid response from the server"
+                return String(localized: "Invalid response from the server")
             case .decodingError(let message):
-                return "Error decoding data: \(message)"
+                return String(format: "Error decoding data: %@", message.localizedDescription)
             case .unexpectedHTTPStatusCode(let statusCode):
-                return "Unexpected HTTP status code: \(statusCode)"
+                return String(format: "Unexpected HTTP status code: %@", statusCode.description)
             }
         }
     }
