@@ -93,6 +93,9 @@
         }
       }
     },
+    "Invalid response from the server" : {
+
+    },
     "Main + Extras" : {
       "localizations" : {
         "de" : {
@@ -184,6 +187,9 @@
           }
         }
       }
+    },
+    "No data received from the server" : {
+
     },
     "Single-Player" : {
       "localizations" : {

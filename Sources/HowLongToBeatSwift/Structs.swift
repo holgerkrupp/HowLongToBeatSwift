@@ -18,7 +18,7 @@ public struct HowLongToBeatGame: Codable, Equatable, Hashable {
     let comp_lvl_sp: Int
     let comp_lvl_co: Int
     let comp_lvl_mp: Int
-    let comp_lvl_spd: Int
+  //  let comp_lvl_spd: Int
     let comp_main: Int
     let comp_plus: Int
     let comp_100: Int
@@ -38,10 +38,10 @@ public struct HowLongToBeatGame: Codable, Equatable, Hashable {
     let review_score: Int
     let count_playing: Int
     let count_retired: Int
-    let profile_dev: String
+  //  let profile_dev: String
     let profile_popular: Int
-    let profile_steam: Int
-    public let profile_platform: String
+//    let profile_steam: Int
+ //   public let profile_platform: String
     public let release_world: Int
     // Add other properties as needed
     

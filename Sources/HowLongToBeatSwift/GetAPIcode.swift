@@ -1,8 +1,6 @@
-//
-//  File.swift
-//  HowLongToBeatSwift
-//
-//  Created by Holger Krupp on 01.10.24.
-//
-
 import Foundation
+
+
+    
+    
+
