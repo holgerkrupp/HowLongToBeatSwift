@@ -157,7 +157,7 @@ public class HLTBRequest{
     
 }
 struct HTMLRequests {
-    static let BASE_URL = "https://www.howlongtobeat.com/" // Replace with actual URL
+    static let BASE_URL = "https://www.howlongtobeat.com/"
     
     static func getTitleRequestHeaders() -> [String: String] {
         return ["User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"]
