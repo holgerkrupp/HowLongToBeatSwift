@@ -4,9 +4,10 @@ import Foundation
 
 public class HLTBRequest{
     
-     let endpoint = "https://www.howlongtobeat.com/api/search"
+
     let userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
-    var apiKey:String = ""
+ 
+
     public var request:URLRequest
     
     public enum DataFetchError: Error {
@@ -35,33 +36,40 @@ public class HLTBRequest{
 
     
     public init() async{
-        let urlComponents = NSURLComponents(string: endpoint)!
+
+
+        var searchurl: URL = URL(string: "https://www.howlongtobeat.com")!
         
-        // Create the URL request
-        guard let url = urlComponents.url else {
-            print("Invalid URL")
-            exit(1)
-        }
+        do {
+            let (apiKey, searchURL) = try await HLTBExtractor().fetchAPIInfo()
+            
+                print("API Key: \(apiKey ?? "none"), Search URL: \(searchURL ?? "none")")
+            searchurl = searchurl.appendingPathComponent(searchURL ?? "")
+         
+                if #available(iOS 16, *) {
+                    searchurl = searchurl.appending(path: apiKey ?? "")
+                }
+                else {
+                    searchurl =  searchurl.appendingPathComponent(apiKey ?? "")
+                }
+               
+            
+            print(searchurl.absoluteString)
+            } catch {
+                print("Error fetching API info: \(error)")
+            }
+
+
        
-        if let apikey = await asyncSendWebsiteRequestGetCode(parseAllScripts: false) {
-            print("API Key found: \(apikey)")
-            apiKey = apikey
-        } else {
-            print("No API key found.")
-        }
         
-        let requestURL = url.appendingPathComponent(apiKey)
        
-       
-        
-        request = URLRequest(url: requestURL)
-       
+        request = URLRequest(url: searchurl)
    
         request.httpMethod = "POST"
        request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
         request.addValue("application/json", forHTTPHeaderField: "content-type")
-        request.addValue("https://howlongtobeat.com", forHTTPHeaderField: "referer")
-        request.addValue("https://howlongtobeat.com", forHTTPHeaderField: "origin")
+        request.addValue("https://howlongtobeat.com", forHTTPHeaderField: "Referer")
+    //    request.addValue("https://howlongtobeat.com", forHTTPHeaderField: "origin")
        
     }
     
@@ -71,15 +79,54 @@ public class HLTBRequest{
         
         
         let postData = """
+                        
+                        
                         {
                             "searchType": "games",
                             "searchTerms": [
-                                "\(searchTerm)"
+                                    "\(searchTerm)"
                             ],
-                            "size" : 20
+                            "searchPage": 1,
+                            "size": 20,
+                            "searchOptions": {
+                                "games": {
+                                    "userId": 0,
+                                    "platform": "",
+                                    "sortCategory": "popular",
+                                    "rangeCategory": "main",
+                                    "rangeTime": {
+                                        "min": 0,
+                                        "max": 0
+                                    },
+                                    "gameplay": {
+                                        "perspective": "",
+                                        "flow": "",
+                                        "genre": "",
+                                        "difficulty": ""
+                                    },
+                                    "rangeYear": {
+                                        "max": "",
+                                        "min": ""
+                                    },
+                                    "modifier": ""
+                                },
+                                "users": {
+                                    "sortCategory": "postcount"
+                                },
+                                "lists": {
+                                    "sortCategory": "follows"
+                                },
+                                "filter": "",
+                                "sort": 0,
+                                "randomizer": 0
+                            },
+                            "useCache": true
                         }
+                        
                         """
         request.httpBody = postData.data(using: .utf8)
+        
+        dump(request)
         
         let (data, response) = try await URLSession.shared.data(for: request)
  
@@ -99,6 +146,11 @@ public class HLTBRequest{
         
         let htmlString = String(data: data, encoding: .utf8)
 
+print("----------")
+print(htmlString ?? "No HTML String")
+print("----------")
+
+        
             do {
                 let decoder = JSONDecoder()
                 let parsedData = try decoder.decode(JSONData.self, from: data)
