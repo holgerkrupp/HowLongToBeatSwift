@@ -146,9 +146,7 @@ public class HLTBRequest{
         
         let htmlString = String(data: data, encoding: .utf8)
 
-print("----------")
-print(htmlString ?? "No HTML String")
-print("----------")
+
 
         
             do {
