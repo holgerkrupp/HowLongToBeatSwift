@@ -46,12 +46,9 @@ public class HLTBRequest{
                 print("API Key: \(apiKey ?? "none"), Search URL: \(searchURL ?? "none")")
             searchurl = searchurl.appendingPathComponent(searchURL ?? "")
          
-                if #available(iOS 16, *) {
-                    searchurl = searchurl.appending(path: apiKey ?? "")
-                }
-                else {
-                    searchurl =  searchurl.appendingPathComponent(apiKey ?? "")
-                }
+               
+             searchurl = searchurl.appending(path: apiKey ?? "")
+                
                
             
             print(searchurl.absoluteString)
@@ -144,7 +141,7 @@ public class HLTBRequest{
             throw DataFetchError.noDataReceived
         }
         
-        let htmlString = String(data: data, encoding: .utf8)
+        _ = String(data: data, encoding: .utf8)
 
 
 

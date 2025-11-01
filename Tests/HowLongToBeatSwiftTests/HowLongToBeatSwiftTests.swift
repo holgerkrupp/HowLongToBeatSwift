@@ -2,11 +2,19 @@ import XCTest
 @testable import HowLongToBeatSwift
 
 final class HowLongToBeatSwiftTests: XCTestCase {
-    func testExample() throws {
-        // XCTest Documentation
-        // https://developer.apple.com/documentation/xctest
-
-        // Defining Test Cases and Test Methods
-        // https://developer.apple.com/documentation/xctest/defining_test_cases_and_test_methods
+    func testSMB3() async throws {
+       
+        let searchName = "Super Mario Bros. 3"
+        
+        let hltb = await HLTBRequest()
+        do{
+            let games = try await hltb.search(searchTerm: searchName)
+            dump(games)
+            XCTAssertFalse(games.isEmpty, "Expected at least one result for \(searchName), but got 0.")
+        }catch{
+            XCTFail("Search threw an unexpected error: \(error)")
+        }
+        
+        
     }
 }
