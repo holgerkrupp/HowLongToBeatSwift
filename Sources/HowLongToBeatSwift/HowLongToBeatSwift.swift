@@ -35,107 +35,105 @@ public class HLTBRequest{
     }
 
     
+    private var token: HLTBSecurityToken?
+
     public init() async{
 
+        let searchurl = URL(string: "https://howlongtobeat.com/api/bleed")!
 
-        var searchurl: URL = URL(string: "https://www.howlongtobeat.com")!
-        
-        do {
-            let (apiKey, searchURL) = try await HLTBExtractor().fetchAPIInfo()
-            
-                print("API Key: \(apiKey ?? "none"), Search URL: \(searchURL ?? "none")")
-            searchurl = searchurl.appendingPathComponent(searchURL ?? "")
-         
-               
-             searchurl = searchurl.appending(path: apiKey ?? "")
-                
-               
-            
-            print(searchurl.absoluteString)
-            } catch {
-                print("Error fetching API info: \(error)")
-            }
-
-
-       
-        
-       
         request = URLRequest(url: searchurl)
-   
+
         request.httpMethod = "POST"
        request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
         request.addValue("application/json", forHTTPHeaderField: "content-type")
         request.addValue("https://howlongtobeat.com", forHTTPHeaderField: "Referer")
     //    request.addValue("https://howlongtobeat.com", forHTTPHeaderField: "origin")
-       
+
+        do {
+            try await refreshToken()
+        } catch {
+            print("Error fetching search token: \(error)")
+        }
     }
-    
+
+    /// The token expires, so the search retries once with a fresh one on a 403.
+    private func refreshToken() async throws {
+        let token = try await HLTBExtractor().fetchSecurityToken(userAgent: userAgent)
+        self.token = token
+
+        request.setValue(token.token, forHTTPHeaderField: "x-auth-token")
+        request.setValue(token.hpKey, forHTTPHeaderField: "x-hp-key")
+        request.setValue(token.hpVal, forHTTPHeaderField: "x-hp-val")
+    }
+
+    private func makeBody(searchTerm: String) throws -> Data {
+        var payload: [String: Any] = [
+            "searchType": "games",
+            "searchTerms": searchTerm.trimmingCharacters(in: .whitespaces).components(separatedBy: " "),
+            "searchPage": 1,
+            "size": 20,
+            "searchOptions": [
+                "games": [
+                    "userId": 0,
+                    "platform": "",
+                    "sortCategory": "popular",
+                    "rangeCategory": "main",
+                    "rangeTime": ["min": NSNull(), "max": NSNull()],
+                    "gameplay": ["perspective": "", "flow": "", "genre": "", "difficulty": ""],
+                    "rangeYear": ["min": "", "max": ""],
+                    "modifier": ""
+                ],
+                "users": ["sortCategory": "postcount"],
+                "lists": ["sortCategory": "follows"],
+                "filter": "",
+                "sort": 0,
+                "randomizer": 0
+            ],
+            "useCache": true
+        ]
+
+        // The honeypot key/value pair has to be echoed back in the body as well.
+        if let token {
+            payload[token.hpKey] = token.hpVal
+        }
+
+        return try JSONSerialization.data(withJSONObject: payload)
+    }
+
     
     public func search(searchTerm: String, extactMatch:Bool = true) async throws -> [HowLongToBeatGame] {
         
         
         
-        let postData = """
-                        
-                        
-                        {
-                            "searchType": "games",
-                            "searchTerms": [
-                                    "\(searchTerm)"
-                            ],
-                            "searchPage": 1,
-                            "size": 20,
-                            "searchOptions": {
-                                "games": {
-                                    "userId": 0,
-                                    "platform": "",
-                                    "sortCategory": "popular",
-                                    "rangeCategory": "main",
-                                    "rangeTime": {
-                                        "min": 0,
-                                        "max": 0
-                                    },
-                                    "gameplay": {
-                                        "perspective": "",
-                                        "flow": "",
-                                        "genre": "",
-                                        "difficulty": ""
-                                    },
-                                    "rangeYear": {
-                                        "max": "",
-                                        "min": ""
-                                    },
-                                    "modifier": ""
-                                },
-                                "users": {
-                                    "sortCategory": "postcount"
-                                },
-                                "lists": {
-                                    "sortCategory": "follows"
-                                },
-                                "filter": "",
-                                "sort": 0,
-                                "randomizer": 0
-                            },
-                            "useCache": true
-                        }
-                        
-                        """
-        request.httpBody = postData.data(using: .utf8)
-        
-        dump(request)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
- 
-     guard let httpResponse = response as? HTTPURLResponse else {
+        if token == nil {
+            try await refreshToken()
+        }
+
+        request.httpBody = try makeBody(searchTerm: searchTerm)
+
+        var (data, response) = try await URLSession.shared.data(for: request)
+
+     guard var httpResponse = response as? HTTPURLResponse else {
             throw DataFetchError.invalidResponse
         }
-        
+
+        // The token is short lived - refresh it once and retry before giving up.
+        if httpResponse.statusCode == 403 {
+            try await refreshToken()
+            request.httpBody = try makeBody(searchTerm: searchTerm)
+
+            (data, response) = try await URLSession.shared.data(for: request)
+            guard let retryResponse = response as? HTTPURLResponse else {
+                throw DataFetchError.invalidResponse
+            }
+            httpResponse = retryResponse
+        }
+
         // Check if the response status code is successful
         guard (200...299).contains(httpResponse.statusCode) else {
             throw DataFetchError.unexpectedHTTPStatusCode(httpResponse.statusCode)
         }
-        
+
         // Check if data is received
         guard !data.isEmpty else {
             throw DataFetchError.noDataReceived
