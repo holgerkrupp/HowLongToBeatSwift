@@ -25,12 +25,30 @@ class HLTBExtractor {
         request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
         request.setValue(baseURL, forHTTPHeaderField: "Referer")
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch {
+            // The host was unreachable at all - keep the underlying error, it says whether
+            // this was DNS, TLS or a timeout.
+            throw NSError(domain: "FetchError", code: 3,
+                          userInfo: [NSLocalizedDescriptionKey: "Could not reach \(baseURL): \(error.localizedDescription)",
+                                     NSUnderlyingErrorKey: error])
+        }
 
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+        guard let httpResponse = response as? HTTPURLResponse else {
             throw NSError(domain: "FetchError", code: 1,
-                          userInfo: [NSLocalizedDescriptionKey: "Could not fetch search token"])
+                          userInfo: [NSLocalizedDescriptionKey: "Could not fetch search token: response was not HTTP"])
+        }
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            // Without the status code and body a CI failure here is undiagnosable: a 403
+            // (the runner is being blocked) and a 404 (the endpoint moved again) need
+            // very different fixes.
+            throw NSError(domain: "FetchError", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "Could not fetch search token: HTTP \(httpResponse.statusCode) from \(url.absoluteString). Body: \(HLTBExtractor.bodySnippet(data))",
+                                     "statusCode": httpResponse.statusCode])
         }
 
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -38,9 +56,18 @@ class HLTBExtractor {
               let hpKey = json["hpKey"] as? String,
               let hpVal = json["hpVal"] as? String else {
             throw NSError(domain: "FetchError", code: 2,
-                          userInfo: [NSLocalizedDescriptionKey: "Unexpected token payload"])
+                          userInfo: [NSLocalizedDescriptionKey: "Unexpected token payload: \(HLTBExtractor.bodySnippet(data))"])
         }
 
         return HLTBSecurityToken(token: token, hpKey: hpKey, hpVal: hpVal)
+    }
+
+    /// A short, log-safe excerpt of a response body.
+    private static func bodySnippet(_ data: Data, limit: Int = 512) -> String {
+        guard let text = String(data: data.prefix(limit), encoding: .utf8)?
+            .trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else {
+            return "<\(data.count) bytes, not UTF-8 text>"
+        }
+        return data.count > limit ? "\(text)… (\(data.count) bytes total)" : text
     }
 }
