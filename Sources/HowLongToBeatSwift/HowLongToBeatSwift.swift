@@ -39,7 +39,7 @@ public class HLTBRequest{
 
     public init() async{
 
-        let searchurl = URL(string: "https://howlongtobeat.com/api/bleed")!
+        let searchurl = URL(string: "https://howlongtobeat.com/api/search/site")!
 
         request = URLRequest(url: searchurl)
 

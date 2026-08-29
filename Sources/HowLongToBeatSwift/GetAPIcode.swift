@@ -13,11 +13,11 @@ class HLTBExtractor {
     let baseURL = "https://howlongtobeat.com"
 
     /// The site used to hide the search endpoint inside its JS bundle. It now hands out
-    /// a per-session token from `/api/bleed/init` instead, so there is nothing to scrape.
+    /// a per-session token from `/api/search/site/init` instead, so there is nothing to scrape.
     func fetchSecurityToken(userAgent: String) async throws -> HLTBSecurityToken {
         // The token is bound to the timestamp, so it has to be part of the query.
         let timestamp = Int(Date().timeIntervalSince1970 * 1000)
-        guard let url = URL(string: "\(baseURL)/api/bleed/init?t=\(timestamp)") else {
+        guard let url = URL(string: "\(baseURL)/api/search/site/init?t=\(timestamp)") else {
             throw URLError(.badURL)
         }
 
