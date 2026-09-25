@@ -1,12 +1,12 @@
 import Foundation
 
 /// The short lived credentials the search endpoint expects.
-/// `token` goes into the `x-auth-token` header, `hpKey`/`hpVal` go into the
-/// `x-hp-key`/`x-hp-val` headers *and* into the request body as an extra field.
+/// `token` goes into the `x-auth-token` header. Older responses also included
+/// an optional honeypot key/value pair, which callers echo into the request.
 struct HLTBSecurityToken {
     let token: String
-    let hpKey: String
-    let hpVal: String
+    let hpKey: String?
+    let hpVal: String?
 }
 
 class HLTBExtractor {
@@ -52,14 +52,14 @@ class HLTBExtractor {
         }
 
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let token = json["token"] as? String,
-              let hpKey = json["hpKey"] as? String,
-              let hpVal = json["hpVal"] as? String else {
+              let token = json["token"] as? String else {
             throw NSError(domain: "FetchError", code: 2,
                           userInfo: [NSLocalizedDescriptionKey: "Unexpected token payload: \(HLTBExtractor.bodySnippet(data))"])
         }
 
-        return HLTBSecurityToken(token: token, hpKey: hpKey, hpVal: hpVal)
+        return HLTBSecurityToken(token: token,
+                                 hpKey: json["hpKey"] as? String,
+                                 hpVal: json["hpVal"] as? String)
     }
 
     /// A short, log-safe excerpt of a response body.

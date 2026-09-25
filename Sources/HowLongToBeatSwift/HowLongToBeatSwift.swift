@@ -93,8 +93,8 @@ public class HLTBRequest{
         ]
 
         // The honeypot key/value pair has to be echoed back in the body as well.
-        if let token {
-            payload[token.hpKey] = token.hpVal
+        if let token, let hpKey = token.hpKey, let hpVal = token.hpVal {
+            payload[hpKey] = hpVal
         }
 
         return try JSONSerialization.data(withJSONObject: payload)
